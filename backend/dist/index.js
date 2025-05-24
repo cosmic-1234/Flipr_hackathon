@@ -1,5 +1,15 @@
 "use strict";
-function greet(name) {
-    return `Hello, ${name}!`;
-}
-console.log(greet("World"));
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = __importDefault(require("express"));
+const app = (0, express_1.default)();
+const cors = require("cors");
+const MainRouter = require("./routes/index");
+app.use(express_1.default.json());
+app.use(cors());
+app.use("api/v1/", MainRouter);
+app.listen(3000, () => {
+    console.log("Server is running on port 3000");
+});

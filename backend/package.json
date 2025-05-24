@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "build": " tsc -b",
+    "watch": "tsc -b --watch",
+    "serve": "nodemon dist/index.js",
+    "devts": "concurrently  \"npm run watch\" \"npm run serve\""
   },
   "keywords": [],
   "author": "",
@@ -12,12 +16,17 @@
   "devDependencies": {
     "@types/express": "^5.0.2",
     "@types/node": "^22.15.21",
+    "concurrently": "^9.1.2",
     "express": "^5.1.0",
+    "nodemon": "^3.1.10",
     "prisma": "^6.8.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@prisma/client": "^6.8.2"
+    "@prisma/client": "^6.8.2",
+    "cors": "^2.8.5",
+    "jsonwebtoken": "^9.0.2",
+    "zod": "^3.25.28"
   }
 }

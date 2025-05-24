@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -17,5 +16,77 @@ datasource db {
 model User {
   id String @id @default(uuid())
   email String @unique
+  username String @unique
   password String
+  avatarUrl String?
+  isOnline Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  messages Message[] 
+  participants Participant[] 
+  reactions Reaction[] 
+  typingStatus TypingStatus[] 
+  messageReads MessageRead[] 
+  
+}
+
+model Chat {
+  id String @id @default(uuid())
+  isGroup Boolean @default(false)
+  createdAt DateTime @default(now())
+  participants Participant[] 
+  messages Message[] 
+  typingStatus TypingStatus[] 
+}
+
+model Participant {
+  id String @id @default(uuid())
+  userId String
+  chatId String
+  joinedAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id])
+  chat Chat @relation(fields: [chatId], references: [id])
+}
+model Message {
+  id String @id @default(uuid())
+  chatId String
+  senderId String
+  content String?
+  fileUrl String?
+  createdAt DateTime @default(now())
+  chat Chat @relation(fields: [chatId], references: [id])
+  sender User @relation(fields: [senderId], references: [id])
+  reactions Reaction[] 
+  messageReads MessageRead[] 
+}
+
+model Reaction {
+  id String @id @default(uuid())
+  messageId String
+  userId String
+  emoji String
+  createdAt DateTime @default(now())
+  message Message @relation(fields: [messageId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  @@unique([messageId, userId, emoji])
+}
+
+model MessageRead {
+  id String @id @default(uuid())
+  messageId String
+  userId String
+  readAt DateTime @default(now())
+  message Message @relation(fields: [messageId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  @@unique([messageId, userId])
+}
+model TypingStatus {
+  id String @id @default(uuid())
+  chatId String
+  userId String
+  isTyping Boolean @default(false)
+  createdAt DateTime @default(now())
+  chat Chat @relation(fields: [chatId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+  @@unique([chatId, userId])
 }
