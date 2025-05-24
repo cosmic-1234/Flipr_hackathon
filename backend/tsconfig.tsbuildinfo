@@ -1,1 +1,1 @@
-{"root":["./src/index.ts","./src/db/db.ts","./src/routes/index.ts","./src/routes/user/index.ts"],"errors":true,"version":"5.8.3"}
+{"root":["./src/index.ts","./src/zod.ts","./src/db/db.ts","./src/middleware/middleware.ts","./src/routes/index.ts","./src/routes/chats/index.ts","./src/routes/messages/index.ts","./src/routes/user/index.ts","./src/websocket/socket.ts"],"errors":true,"version":"5.8.3"}

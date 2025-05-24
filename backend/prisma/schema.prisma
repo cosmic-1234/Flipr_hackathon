@@ -41,21 +41,21 @@ model Chat {
 
 model Participant {
   id String @id @default(uuid())
-  userId String
+  username String
   chatId String
   joinedAt DateTime @default(now())
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [username], references: [id])
   chat Chat @relation(fields: [chatId], references: [id])
 }
 model Message {
   id String @id @default(uuid())
   chatId String
-  senderId String
+  username String
   content String?
   fileUrl String?
   createdAt DateTime @default(now())
   chat Chat @relation(fields: [chatId], references: [id])
-  sender User @relation(fields: [senderId], references: [id])
+  sender User @relation(fields: [username], references: [id])
   reactions Reaction[] 
   messageReads MessageRead[] 
 }
@@ -74,11 +74,11 @@ model Reaction {
 model MessageRead {
   id String @id @default(uuid())
   messageId String
-  userId String
+  username String
   readAt DateTime @default(now())
   message Message @relation(fields: [messageId], references: [id])
-  user User @relation(fields: [userId], references: [id])
-  @@unique([messageId, userId])
+  user User @relation(fields: [username], references: [id])
+  @@unique([messageId, username])
 }
 model TypingStatus {
   id String @id @default(uuid())
