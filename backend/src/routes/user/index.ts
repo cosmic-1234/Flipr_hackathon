@@ -5,6 +5,7 @@ import { USER_BODY, SIGNIN_BODY } from "../../zod";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import authenticate from "../../middleware/middleware";
+import userAuth from "../../middleware/middleware";
 dotenv.config();
 
 
@@ -93,8 +94,18 @@ router.get("/logout", async(req, res)=>{
     res.status(200).json({ message: 'Logged out successfully' });
 })
 
+router.get("/profile", userAuth, async(req, res) => {
+    try {
+          return void res.status(200).json((req as any).user);
+      } catch (e) {
+          console.log("ERR", e);
+          return void res.status(511).json({
+              message: "Could'nt get the data",
+          });
+      }
+})
 // Add this new endpoint for searching users
-router.get("/search", async (req, res) => {
+router.get("/search", userAuth, async (req, res) => {
   const searchQuery = req.query.q as string;
   console.log('Search query received:', searchQuery);
   console.log('Query type:', typeof searchQuery);

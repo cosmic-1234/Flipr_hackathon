@@ -51,8 +51,9 @@ router.get("/chats/:chatId/messages", middleware_1.default, (req, res) => __awai
         return void res.status(500).json({ error: "Failed to fetch messages" });
     }
 }));
-router.post("/createchat", middleware_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post("/createchat", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const usernames = req.body.usernames;
+    console.log(usernames);
     try {
         const chat = yield db_1.default.chat.create({
             data: {

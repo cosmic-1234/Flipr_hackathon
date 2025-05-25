@@ -8,7 +8,7 @@ import StoreProvider from "./StoreProvider";
 import { Suspense } from "react";
 // import { usePathname } from 'next/navigation';
 
-import ClientNavbarWrapper from "./(components)/_clientNavbarWrapper/page";
+// import ClientNavbarWrapper from "./(components)/_clientNavbarWrapper/page";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,7 +38,7 @@ export default function RootLayout({
       ><StoreProvider>
         <AuthInitializer/>
         <Suspense>
-        <ClientNavbarWrapper/>
+        {/* <ClientNavbarWrapper/> */}
         {children}
         </Suspense>
         

@@ -8,8 +8,7 @@
     "watch": "tsc -b --watch",
     "serve": "nodemon dist/index.js",
     "devts": "concurrently  \"npm run watch\" \"npm run serve\"",
-    "prod": "npx prisma migrate deploy && npm run devts",
-    "prisma:seed": "npx prisma migrate deploy && node ./prisma/seed.js"
+    "prisma:seed": "node ./prisma/seed.js"
   },
   "keywords": [],
   "author": "",

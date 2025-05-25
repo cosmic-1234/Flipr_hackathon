@@ -9,16 +9,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../public/store';
 import { login } from '@/public/features/authSlice';
 import { setAuthCookie } from '../_cookies/cookies';
-import dotenv from "dotenv";
-// import Loading from '../loading/loading';
-dotenv.config();
 
 interface User {
-  name: string;
+  username: string;
   email: string;
-  company?: string;
   password: string;
-  phone?: string;
 }
 
 export default function UserSignup() {
@@ -26,18 +21,16 @@ export default function UserSignup() {
   const router = useRouter();
   const token = useSelector((state: RootState) => state.auth.token);
   const [formData, setFormData] = useState<User>({
-    name: '',
+    username: '',
     email: '',
-    company: '',
     password: '',
-    phone: '',
   });
   const [error, setError] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     if (token) {
-      router.push('/client/home');
+      router.push('/homepage');
     }
   }, [token, router]);
 
@@ -51,14 +44,14 @@ export default function UserSignup() {
     setError('');
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/client/signup`,
+        `${process.env.NEXT_PUBLIC_API_URL}/user/signup`,
         {
           ...formData,
         },
         { withCredentials: true }
       );
 
-      const { token, role, userId } = response.data;
+      const { token } = response.data;
 
       localStorage.setItem('token', token);
       setAuthCookie(token);
@@ -67,26 +60,24 @@ export default function UserSignup() {
           token,
           isAuthenticated: true,
           email: formData.email,
-          username: formData.name,
-          role,
-          userId,
+          username: formData.username,
+          role: '',   // Not returned by backend
+          userId: '', // Not returned by backend
         })
       );
 
       setSubmitted(true);
-      // Reduced timeout to 2 seconds and added error handling
       setTimeout(() => {
         try {
-          router.push('/client/home');
+          router.push('/homepage');
         } catch (err) {
-          console.error('Navigation failed:', err);
-          // Fallback direct navigation
-          window.location.href = '/client/home';
+          console.log(err)
+          window.location.href = '/homepage';
         }
       }, 2000);
     } catch (err) {
-      console.error(err);
       setError('Signup failed. Please try again.');
+      console.log(err)
     }
   };
 
@@ -127,27 +118,18 @@ export default function UserSignup() {
           </motion.div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            {/* Input Fields */}
-            {['name', 'email', 'company', 'phone', 'password'].map((field) => (
-              <div key={field} className="relative">
-                <input
-                  type={
-                    field === 'password'
-                      ? 'password'
-                      : field === 'email'
-                      ? 'email'
-                      : field === 'phone'
-                      ? 'tel'
-                      : 'text'
-                  }
-                  name={field}
-                  placeholder=" "
-                  value={formData[field as keyof typeof formData] || ''}
-                  onChange={handleChange}
-                  required={['name', 'email', 'password'].includes(field)}
-                  className="peer px-4 py-3 w-full rounded-xl border border-gray-700 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400 outline-none bg-transparent text-sm text-white placeholder-transparent"
-                />
-                <label
+            {/* Username */}
+            <div className="relative">
+              <input
+                type="text"
+                name="username"
+                placeholder=" "
+                value={formData.username}
+                onChange={handleChange}
+                required
+                className="peer px-4 py-3 w-full rounded-xl border border-gray-700 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400 outline-none bg-transparent text-sm text-white placeholder-transparent"
+              />
+              <label
                 className="absolute left-4 top-3 text-cyan-400 text-sm transition-all
                   peer-placeholder-shown:top-3.5 
                   peer-placeholder-shown:text-gray-500 
@@ -157,10 +139,57 @@ export default function UserSignup() {
                   peer-[&:not(:placeholder-shown)]:top-0
                   peer-[&:not(:placeholder-shown)]:text-xs
                   peer-[&:not(:placeholder-shown)]:text-cyan-300">
-                  {field.charAt(0).toUpperCase() + field.slice(1)}
-                </label>
-              </div>
-            ))}
+                Username
+              </label>
+            </div>
+            {/* Email */}
+            <div className="relative">
+              <input
+                type="email"
+                name="email"
+                placeholder=" "
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="peer px-4 py-3 w-full rounded-xl border border-gray-700 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400 outline-none bg-transparent text-sm text-white placeholder-transparent"
+              />
+              <label
+                className="absolute left-4 top-3 text-cyan-400 text-sm transition-all
+                  peer-placeholder-shown:top-3.5 
+                  peer-placeholder-shown:text-gray-500 
+                  peer-focus:top-0 
+                  peer-focus:text-xs 
+                  peer-focus:text-cyan-300
+                  peer-[&:not(:placeholder-shown)]:top-0
+                  peer-[&:not(:placeholder-shown)]:text-xs
+                  peer-[&:not(:placeholder-shown)]:text-cyan-300">
+                Email
+              </label>
+            </div>
+            {/* Password */}
+            <div className="relative">
+              <input
+                type="password"
+                name="password"
+                placeholder=" "
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="peer px-4 py-3 w-full rounded-xl border border-gray-700 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400 outline-none bg-transparent text-sm text-white placeholder-transparent"
+              />
+              <label
+                className="absolute left-4 top-3 text-cyan-400 text-sm transition-all
+                  peer-placeholder-shown:top-3.5 
+                  peer-placeholder-shown:text-gray-500 
+                  peer-focus:top-0 
+                  peer-focus:text-xs 
+                  peer-focus:text-cyan-300
+                  peer-[&:not(:placeholder-shown)]:top-0
+                  peer-[&:not(:placeholder-shown)]:text-xs
+                  peer-[&:not(:placeholder-shown)]:text-cyan-300">
+                Password
+              </label>
+            </div>
 
             {/* Error Message */}
             {error && <p className="text-sm text-red-500 text-center">{error}</p>}
@@ -179,7 +208,7 @@ export default function UserSignup() {
 
         <p className="text-center text-gray-400 mt-5 text-xs">
           Already have an account?{' '}
-          <Link href="/usersignin" className="text-cyan-400 font-semibold hover:underline">
+          <Link href="/signin" className="text-cyan-400 font-semibold hover:underline">
             Log In
           </Link>
         </p>
