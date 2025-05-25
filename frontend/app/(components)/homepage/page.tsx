@@ -36,7 +36,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import debounce from 'lodash/debounce';
-
+import { useSelector } from 'react-redux'
+import { RootState } from '@/public/store'
 interface Message {
   id: string;
   text?: string;
@@ -87,7 +88,7 @@ export default function HomePage() {
   const [chatName, setChatName] = useState('');
   const [isGroup, setIsGroup] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-
+  const token = useSelector((state: RootState) => state.auth.token);
   // Create a memoized debounced search function
   const debouncedSearch = useCallback(
     debounce(async (query: string) => {
@@ -97,8 +98,12 @@ export default function HomePage() {
       }
       setIsSearching(true);
       try {
+        console.log(query)
         const response = await axios.get(`http://localhost:3000/api/v1/user/search`, {
-          params: { q: query }
+          params: { q: query }, 
+          headers : {
+            Authorization : token
+          }
         });
         setSearchResults(response.data.users);
       } catch (error) {

@@ -39,8 +39,9 @@ router.get("/chats/:chatId/messages", authenticate, async (req, res) => {
   }
 });
 
-router.post("/createchat", authenticate, async (req,res)=>{
+router.post("/createchat", async (req,res)=>{
   const usernames : string[] = req.body.usernames
+  console.log(usernames)
     try {
       const chat = await prisma.chat.create({
         data:{
