@@ -89,4 +89,48 @@ router.get("/logout", (req, res) => __awaiter(void 0, void 0, void 0, function* 
     res.clearCookie('role', { httpOnly: true, secure: false, path: '/' });
     res.status(200).json({ message: 'Logged out successfully' });
 }));
+// Add this new endpoint for searching users
+router.get("/search", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const searchQuery = req.query.q;
+    console.log('Search query received:', searchQuery);
+    console.log('Query type:', typeof searchQuery);
+    if (!searchQuery || searchQuery.trim() === "") {
+        console.log('Empty search query');
+        return void res.status(400).json({ error: "Search query is required" });
+    }
+    try {
+        console.log('Executing database query with:', searchQuery);
+        const users = yield db_1.default.user.findMany({
+            where: {
+                username: {
+                    contains: searchQuery,
+                    mode: 'insensitive'
+                }
+            },
+            select: {
+                id: true,
+                username: true,
+                avatarUrl: true,
+                isOnline: true
+            },
+            take: 10
+        });
+        console.log('Database query result:', users);
+        console.log('Number of users found:', users.length);
+        const response = {
+            users: users.map(user => ({
+                id: user.id,
+                username: user.username,
+                avatarUrl: user.avatarUrl,
+                isOnline: user.isOnline
+            }))
+        };
+        console.log('Sending response:', response);
+        return void res.status(200).json(response);
+    }
+    catch (error) {
+        console.error("Error searching users:", error);
+        return void res.status(500).json({ error: "Failed to search users" });
+    }
+}));
 exports.default = router;

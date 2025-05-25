@@ -4,6 +4,7 @@ import prisma from "../../db/db";
 import { USER_BODY, SIGNIN_BODY } from "../../zod";
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
+import authenticate from "../../middleware/middleware";
 dotenv.config();
 
 
@@ -91,4 +92,54 @@ router.get("/logout", async(req, res)=>{
   
     res.status(200).json({ message: 'Logged out successfully' });
 })
+
+// Add this new endpoint for searching users
+router.get("/search", async (req, res) => {
+  const searchQuery = req.query.q as string;
+  console.log('Search query received:', searchQuery);
+  console.log('Query type:', typeof searchQuery);
+
+  if (!searchQuery || searchQuery.trim() === "") {
+    console.log('Empty search query');
+    return void res.status(400).json({ error: "Search query is required" });
+  }
+
+  try {
+    console.log('Executing database query with:', searchQuery);
+    const users = await prisma.user.findMany({
+      where: {
+        username: {
+          contains: searchQuery,
+          mode: 'insensitive'
+        }
+      },
+      select: {
+        id: true,
+        username: true,
+        avatarUrl: true,
+        isOnline: true
+      },
+      take: 10
+    });
+
+    console.log('Database query result:', users);
+    console.log('Number of users found:', users.length);
+
+    const response = {
+      users: users.map(user => ({
+        id: user.id,
+        username: user.username,
+        avatarUrl: user.avatarUrl,
+        isOnline: user.isOnline
+      }))
+    };
+
+    console.log('Sending response:', response);
+    return void res.status(200).json(response);
+  } catch (error) {
+    console.error("Error searching users:", error);
+    return void res.status(500).json({ error: "Failed to search users" });
+  }
+});
+
 export default router;

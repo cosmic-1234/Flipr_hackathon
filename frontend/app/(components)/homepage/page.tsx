@@ -1,13 +1,13 @@
 'use client';
 import axios from 'axios';
-import { useEffect, useState, useRef, use } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageCircle, CheckCheck, Mic, Paperclip, Smile, Image as ImageIcon, ThumbsUp, Settings, LogOut, User, Moon, Sun } from 'lucide-react';
+import { MessageCircle, CheckCheck, Mic, Paperclip, Smile, Image as ImageIcon, ThumbsUp, Settings, LogOut, User, Moon, Sun, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import {
@@ -18,6 +18,24 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "next-themes";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
+import debounce from 'lodash/debounce';
 
 interface Message {
   id: string;
@@ -43,6 +61,12 @@ interface Chat {
   username: string;
 }
 
+interface SearchUser {
+  id: string;
+  username: string;
+  avatarUrl?: string;
+}
+
 const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000';
 
 export default function HomePage() {
@@ -56,6 +80,44 @@ export default function HomePage() {
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
   const [chats, setChats] = useState<Chat[]>([]);
+  const [isCreateChatOpen, setIsCreateChatOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SearchUser[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<SearchUser[]>([]);
+  const [chatName, setChatName] = useState('');
+  const [isGroup, setIsGroup] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Create a memoized debounced search function
+  const debouncedSearch = useCallback(
+    debounce(async (query: string) => {
+      if (!query.trim()) {
+        setSearchResults([]);
+        return;
+      }
+      setIsSearching(true);
+      try {
+        const response = await axios.get(`http://localhost:3000/api/v1/user/search`, {
+          params: { q: query }
+        });
+        setSearchResults(response.data.users);
+      } catch (error) {
+        console.error('Error searching users:', error);
+        toast.error('Failed to search users');
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500),
+    [] // Empty dependency array since we don't want to recreate this function
+  );
+
+  // Effect to trigger search when query changes
+  useEffect(() => {
+    debouncedSearch(searchQuery);
+    return () => {
+      debouncedSearch.cancel();
+    };
+  }, [searchQuery, debouncedSearch]);
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -172,6 +234,56 @@ export default function HomePage() {
     window.location.href = '/signin';
   };
 
+  const handleCreateChat = async () => {
+    if (selectedUsers.length === 0) {
+      toast.error('Please select at least one user');
+      return;
+    }
+
+    if (isGroup && !chatName.trim()) {
+      toast.error('Please enter a chat name');
+      return;
+    }
+
+    try {
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/chats/createchat`, {
+        usernames: selectedUsers.map(user => user.username),
+        isGroup,
+        chatname: chatName
+      });
+
+      toast.success('Chat created successfully');
+      setIsCreateChatOpen(false);
+      setSelectedUsers([]);
+      setChatName('');
+      setIsGroup(false);
+      
+      // Refresh chats list
+      const chatsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/chats/getchats`, {
+        params: { username: user?.username }
+      });
+      setChats(chatsResponse.data.chats);
+    } catch (error) {
+      console.error('Error creating chat:', error);
+      toast.error('Failed to create chat');
+    }
+  };
+
+  const addUser = (user: SearchUser) => {
+    if (!selectedUsers.find(u => u.id === user.id)) {
+      setSelectedUsers([...selectedUsers, user]);
+    }
+    setSearchQuery('');
+  };
+
+  const removeUser = (userId: string) => {
+    console.log('Removing user with ID:', userId);
+    console.log('Current selected users:', selectedUsers);
+    const updatedUsers = selectedUsers.filter(user => user.id !== userId);
+    console.log('Updated users:', updatedUsers);
+    setSelectedUsers(updatedUsers);
+  };
+
   // if (!user) {
   //   return (
   //     <div className="flex items-center justify-center h-screen">
@@ -184,7 +296,100 @@ export default function HomePage() {
     <div className="grid grid-cols-[300px_1fr] h-screen bg-gray-100 dark:bg-gray-900">
       {/* Sidebar */}
       <div className="border-r border-gray-300 dark:border-gray-700 p-4 overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Chats</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Chats</h2>
+          <Dialog open={isCreateChatOpen} onOpenChange={setIsCreateChatOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Plus className="h-5 w-5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Create New Chat</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="isGroup"
+                    checked={isGroup}
+                    onChange={(e) => setIsGroup(e.target.checked)}
+                    className="rounded border-gray-300"
+                  />
+                  <label htmlFor="isGroup">Create Group Chat</label>
+                </div>
+                
+                {isGroup && (
+                  <Input
+                    placeholder="Enter chat name"
+                    value={chatName}
+                    onChange={(e) => setChatName(e.target.value)}
+                  />
+                )}
+
+                <div className="space-y-2">
+                  <Command className="rounded-lg border shadow-md">
+                    <CommandInput 
+                      placeholder="Search users..." 
+                      value={searchQuery}
+                      onValueChange={setSearchQuery}
+                    />
+                    <CommandList>
+                      {isSearching ? (
+                        <div className="p-2 text-sm text-gray-500">Searching...</div>
+                      ) : searchResults.length === 0 ? (
+                        <CommandEmpty>No users found.</CommandEmpty>
+                      ) : (
+                        <CommandGroup>
+                          {searchResults.map((user) => (
+                            <CommandItem
+                              key={user.id}
+                              onSelect={() => addUser(user)}
+                              className="cursor-pointer"
+                            >
+                              <div className="flex items-center gap-2">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarImage src={user.avatarUrl} />
+                                  <AvatarFallback>{user.username[0]}</AvatarFallback>
+                                </Avatar>
+                                <span>{user.username}</span>
+                              </div>
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      )}
+                    </CommandList>
+                  </Command>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {selectedUsers.map((user) => (
+                    <Badge 
+                      key={user.id} 
+                      variant="secondary" 
+                      className="flex items-center gap-1 px-2 py-1"
+                    >
+                      <span>{user.username}</span>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          removeUser(user.id);
+                        }}
+                        className="ml-1 hover:bg-gray-200 rounded-full p-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  ))}
+                </div>
+
+                <Button onClick={handleCreateChat}>Create Chat</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
         <ul className="space-y-2">
           {chats && chats.length > 0 ? (
             chats.map((chat) => (
