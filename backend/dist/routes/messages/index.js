@@ -21,13 +21,13 @@ const router = express_1.default.Router();
 // This is a Message Read Receipt Route This is a part of step 8.
 router.post("/:messageId/read", middleware_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { messageId } = req.params;
-    const userId = req.user.userId;
+    const username = req.user.username;
     try {
         const existing = yield db_1.default.messageRead.findUnique({
             where: {
-                messageId_userId: {
+                messageId_username: {
                     messageId,
-                    userId,
+                    username,
                 },
             },
         });
@@ -35,7 +35,7 @@ router.post("/:messageId/read", middleware_1.default, (req, res) => __awaiter(vo
             yield db_1.default.messageRead.create({
                 data: {
                     messageId,
-                    userId,
+                    username,
                 },
             });
         }
@@ -48,7 +48,7 @@ router.post("/:messageId/read", middleware_1.default, (req, res) => __awaiter(vo
 }));
 //This Endpoint is for serching the messages 
 //This is a part of Step 20
-router.get("/messages/search", middleware_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/search", middleware_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const keyword = req.query.q;
     if (!keyword || keyword.trim() === "") {
         res.status(400).json({ error: "Query parameter 'q' is required." });
@@ -79,7 +79,7 @@ router.get("/messages/search", middleware_1.default, (req, res) => __awaiter(voi
                 },
                 messageReads: {
                     select: {
-                        userId: true,
+                        username: true,
                         readAt: true,
                     },
                 },

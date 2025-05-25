@@ -15,6 +15,7 @@ dotenv.config();
 
 
 router.post("/signup", async (req, res) => {
+  console.log("inside signup");
   const success = USER_BODY.safeParse(req.body);
   if (success.success) {
     try {
@@ -30,7 +31,7 @@ router.post("/signup", async (req, res) => {
           userId: user.id,
         },
         //@ts-ignore
-        process.env.USER_JWT_SECRET
+        process.env.JWT_SECRET
       );
 
       return void res.status(200).json({
@@ -72,7 +73,7 @@ router.post("/signin", async (req, res) => {
           userId: user.id,
         },
         //@ts-ignore
-        process.env.USER_JWT_SECRET
+        process.env.JWT_SECRET
       );
       return void res.status(200).json({
         token: token,

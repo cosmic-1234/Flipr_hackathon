@@ -26,7 +26,7 @@ const userAuth = async (
     res: Response,
     next: NextFunction
 ) => {
-    
+    debugger
     const token = req.headers.authorization;
     if (!token) {
         return void res.status(400).json({

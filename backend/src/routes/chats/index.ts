@@ -44,7 +44,8 @@ router.post("/createchat", authenticate, async (req,res)=>{
     try {
       const chat = await prisma.chat.create({
         data:{
-          isGroup: req.body.isGroup
+          isGroup: req.body.isGroup,
+          chatname: req.body.chatname
         }
       })
       if (chat){
@@ -52,16 +53,52 @@ router.post("/createchat", authenticate, async (req,res)=>{
           chatId: chat.id,
           username
         }));
-        if (participantsData.length !== 0) {
-          await prisma.participant.createMany({
-            data: participantsData,
-            skipDuplicates: true,
-          });
+        try {
+          if (participantsData.length !== 0) {
+            await prisma.participant.createMany({
+              data: participantsData,
+              skipDuplicates: true,
+            });
+            return void res.status(200).json({
+              message: "Chat created successfully",
+              chatname: chat.chatname,
+              users: req.body.usernames
+            })
+          }
+          
+        } catch (error) {
+          return void res.status(500).json({
+            error:error
+          })
         }
+        
+      
       }
     } catch (error) {
       
     }
 })
+router.get("/getchats", async(req, res)=>{
+  try {
+    const username = req.query.username as string;
+    if (!username) {
+      return void res.status(400).json({ error: "Username is required" });
+    }
 
+    const chats = await prisma.participant.findMany({
+      where:{
+        username: username
+      }
+    })
+    if(chats){
+      return void res.status(200).json({
+        chats: chats
+      })
+    }
+  } catch (error) {
+    return void res.status(500).json({
+      error:error
+    })
+  }
+})
 export default router;

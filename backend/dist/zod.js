@@ -13,4 +13,5 @@ exports.USER_BODY = zod_1.default.object({
 exports.SIGNIN_BODY = zod_1.default.object({
     email: zod_1.default.string().email(),
     password: zod_1.default.string(),
+    username: zod_1.default.string()
 });

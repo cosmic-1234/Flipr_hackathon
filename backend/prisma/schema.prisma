@@ -32,6 +32,7 @@ model User {
 
 model Chat {
   id String @id @default(uuid())
+  chatname String @default("test")
   isGroup Boolean @default(false)
   createdAt DateTime @default(now())
   participants Participant[] 
@@ -43,8 +44,9 @@ model Participant {
   id String @id @default(uuid())
   username String
   chatId String
+  chatname String @default("test")
   joinedAt DateTime @default(now())
-  user User @relation(fields: [username], references: [id])
+  user User @relation(fields: [username], references: [username])
   chat Chat @relation(fields: [chatId], references: [id])
 }
 model Message {
@@ -55,7 +57,7 @@ model Message {
   fileUrl String?
   createdAt DateTime @default(now())
   chat Chat @relation(fields: [chatId], references: [id])
-  sender User @relation(fields: [username], references: [id])
+  sender User @relation(fields: [username], references: [username])
   reactions Reaction[] 
   messageReads MessageRead[] 
 }
@@ -77,7 +79,7 @@ model MessageRead {
   username String
   readAt DateTime @default(now())
   message Message @relation(fields: [messageId], references: [id])
-  user User @relation(fields: [username], references: [id])
+  user User @relation(fields: [username], references: [username])
   @@unique([messageId, username])
 }
 model TypingStatus {

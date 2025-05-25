@@ -56,7 +56,8 @@ router.post("/createchat", middleware_1.default, (req, res) => __awaiter(void 0,
     try {
         const chat = yield db_1.default.chat.create({
             data: {
-                isGroup: req.body.isGroup
+                isGroup: req.body.isGroup,
+                chatname: req.body.chatname
             }
         });
         if (chat) {
@@ -64,15 +65,50 @@ router.post("/createchat", middleware_1.default, (req, res) => __awaiter(void 0,
                 chatId: chat.id,
                 username
             }));
-            if (participantsData.length !== 0) {
-                yield db_1.default.participant.createMany({
-                    data: participantsData,
-                    skipDuplicates: true,
+            try {
+                if (participantsData.length !== 0) {
+                    yield db_1.default.participant.createMany({
+                        data: participantsData,
+                        skipDuplicates: true,
+                    });
+                    return void res.status(200).json({
+                        message: "Chat created successfully",
+                        chatname: chat.chatname,
+                        users: req.body.usernames
+                    });
+                }
+            }
+            catch (error) {
+                return void res.status(500).json({
+                    error: error
                 });
             }
         }
     }
     catch (error) {
+    }
+}));
+router.get("/getchats", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const username = req.query.username;
+        if (!username) {
+            return void res.status(400).json({ error: "Username is required" });
+        }
+        const chats = yield db_1.default.participant.findMany({
+            where: {
+                username: username
+            }
+        });
+        if (chats) {
+            return void res.status(200).json({
+                chats: chats
+            });
+        }
+    }
+    catch (error) {
+        return void res.status(500).json({
+            error: error
+        });
     }
 }));
 exports.default = router;

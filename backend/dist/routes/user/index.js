@@ -22,6 +22,7 @@ dotenv_1.default.config();
 //This Route is part of Step 2
 //SIGNUP
 router.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("inside signup");
     const success = zod_1.USER_BODY.safeParse(req.body);
     if (success.success) {
         try {
@@ -36,7 +37,7 @@ router.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function*
                 userId: user.id,
             }, 
             //@ts-ignore
-            process.env.USER_JWT_SECRET);
+            process.env.JWT_SECRET);
             return void res.status(200).json({
                 token: token,
             });
@@ -71,7 +72,7 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
                 userId: user.id,
             }, 
             //@ts-ignore
-            process.env.USER_JWT_SECRET);
+            process.env.JWT_SECRET);
             return void res.status(200).json({
                 token: token,
             });

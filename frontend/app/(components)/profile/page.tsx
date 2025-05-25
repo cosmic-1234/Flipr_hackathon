@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Pencil } from 'lucide-react';
-import { Developer } from '../../../interfaces';
-import Footer from '../../footer/Footer';
-import SignupPromptModal from '../../signupPromptModal/SignupPromptModal';
+// import { Developer } from '../../../interfaces';
+// import Footer from '../../footer/Footer';
+// import SignupPromptModal from '../../signupPromptModal/SignupPromptModal';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { useSelector } from 'react-redux';

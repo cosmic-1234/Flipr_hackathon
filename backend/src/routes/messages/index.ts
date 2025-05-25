@@ -9,14 +9,14 @@ const router = express.Router();
 // This is a Message Read Receipt Route This is a part of step 8.
 router.post("/:messageId/read", authenticate, async (req, res) => {
   const { messageId } = req.params;
-  const userId = (req as any).user.userId;
+  const username = (req as any).user.username;
 
   try {
     const existing = await prisma.messageRead.findUnique({
       where: {
-        messageId_userId: {
+        messageId_username: {
           messageId,
-          userId,
+          username,
         },
       },
     });
@@ -25,7 +25,7 @@ router.post("/:messageId/read", authenticate, async (req, res) => {
       await prisma.messageRead.create({
         data: {
           messageId,
-          userId,
+          username,
         },
       });
     }
@@ -42,7 +42,7 @@ router.post("/:messageId/read", authenticate, async (req, res) => {
 
 
 //This is a part of Step 20
-router.get("/messages/search", authenticate, async (req, res) => {
+router.get("/search", authenticate, async (req, res) => {
   const keyword = req.query.q as string;
 
   if (!keyword || keyword.trim() === "") {
@@ -75,7 +75,7 @@ router.get("/messages/search", authenticate, async (req, res) => {
         },
         messageReads: {
           select: {
-            userId: true,
+            username: true,
             readAt: true,
           },
         },
