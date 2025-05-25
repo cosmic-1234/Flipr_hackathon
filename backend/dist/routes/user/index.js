@@ -41,6 +41,7 @@ router.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function*
             process.env.JWT_SECRET);
             return void res.status(200).json({
                 token: token,
+                username: user.username
             });
         }
         catch (error) {
@@ -51,6 +52,7 @@ router.post("/signup", (req, res) => __awaiter(void 0, void 0, void 0, function*
 //This Route is also part of Step 2
 //SIGNIN
 router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    debugger;
     const parsedSignin = zod_1.SIGNIN_BODY.safeParse(req.body);
     if (!parsedSignin.success) {
         return void res.status(400).json({
@@ -76,6 +78,7 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
             process.env.JWT_SECRET);
             return void res.status(200).json({
                 token: token,
+                username: user.username
             });
         }
     }
@@ -102,7 +105,7 @@ router.get("/profile", middleware_1.default, (req, res) => __awaiter(void 0, voi
     }
 }));
 // Add this new endpoint for searching users
-router.get("/search", middleware_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/search", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const searchQuery = req.query.q;
     console.log('Search query received:', searchQuery);
     console.log('Query type:', typeof searchQuery);
@@ -133,8 +136,8 @@ router.get("/search", middleware_1.default, (req, res) => __awaiter(void 0, void
             users: users.map(user => ({
                 id: user.id,
                 username: user.username,
-                avatarUrl: user.avatarUrl,
-                isOnline: user.isOnline
+                // avatarUrl: user.avatarUrl,
+                // isOnline: user.isOnline
             }))
         };
         console.log('Sending response:', response);

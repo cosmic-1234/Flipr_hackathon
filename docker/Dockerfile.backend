@@ -1,0 +1,18 @@
+FROM node:23-alpine
+
+WORKDIR /app
+
+# Copy package files for better caching
+COPY ../backend/package*.json ./
+COPY ../backend/tsconfig.json ./
+COPY ../backend/prisma ./prisma
+COPY ../backend/src ./src
+
+# Install dependencies
+RUN npm install
+
+# Generate Prisma client
+RUN npx prisma generate
+RUN npm run build
+# Start the application
+CMD ["sh", "-c", " npm run prod"]

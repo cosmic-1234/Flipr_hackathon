@@ -38,6 +38,7 @@ router.post("/signup", async (req, res) => {
 
       return void res.status(200).json({
         token: token,
+        username: user.username
       });
     } catch (error) {
       return void res.status(500).json({ error: "Internal Server Error" });
@@ -52,6 +53,7 @@ router.post("/signup", async (req, res) => {
 //SIGNIN
 
 router.post("/signin", async (req, res) => {
+  debugger
   const parsedSignin = SIGNIN_BODY.safeParse(req.body);
   if (!parsedSignin.success) {
     return void res.status(400).json({
@@ -79,6 +81,7 @@ router.post("/signin", async (req, res) => {
       );
       return void res.status(200).json({
         token: token,
+        username: user.username
       });
     }
   } catch (error) {
@@ -105,7 +108,7 @@ router.get("/profile", userAuth, async(req, res) => {
       }
 })
 // Add this new endpoint for searching users
-router.get("/search", userAuth, async (req, res) => {
+router.get("/search", async (req, res) => {
   const searchQuery = req.query.q as string;
   console.log('Search query received:', searchQuery);
   console.log('Query type:', typeof searchQuery);
@@ -140,8 +143,8 @@ router.get("/search", userAuth, async (req, res) => {
       users: users.map(user => ({
         id: user.id,
         username: user.username,
-        avatarUrl: user.avatarUrl,
-        isOnline: user.isOnline
+        // avatarUrl: user.avatarUrl,
+        // isOnline: user.isOnline
       }))
     };
 

@@ -8,7 +8,9 @@ import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../public/store';
 import { login } from '@/public/features/authSlice';
-
+import dotenv from "dotenv"
+dotenv.config();
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 export default function UserSignin() {
   const dispatch = useDispatch();
   const router = useRouter();
@@ -29,8 +31,9 @@ export default function UserSignin() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      debugger
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/user/signin`,
+        `${API_URL}/user/signin`,
         {
           email: formData.email,
           password: formData.password,
@@ -45,7 +48,7 @@ export default function UserSignin() {
         return;
       }
 
-      const { token } = response.data;
+      const { token, username } = response.data;
 
       localStorage.setItem('token', token);
       setAuthCookie(token);
@@ -54,7 +57,7 @@ export default function UserSignin() {
           token,
           isAuthenticated: true,
           email: formData.email,
-          username: '', // Not returned by backend
+          username:username, // Not returned by backend
           role: '',     // Not returned by backend
           userId: '',   // Not returned by backend
         })

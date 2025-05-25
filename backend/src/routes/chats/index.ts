@@ -40,7 +40,14 @@ router.get("/chats/:chatId/messages", authenticate, async (req, res) => {
 });
 
 router.post("/createchat", async (req,res)=>{
+  debugger;
   const usernames : string[] = req.body.usernames
+  const singleUsername: string = req.body.username;
+  
+  if (singleUsername) { // Ensure the single username exists
+    usernames.push(singleUsername);
+  }
+
   console.log(usernames)
     try {
       const chat = await prisma.chat.create({
@@ -52,6 +59,7 @@ router.post("/createchat", async (req,res)=>{
       if (chat){
         const participantsData = usernames.map((username) => ({
           chatId: chat.id,
+          chatname: chat.chatname,
           username
         }));
         try {
@@ -81,6 +89,7 @@ router.post("/createchat", async (req,res)=>{
 })
 router.get("/getchats", async(req, res)=>{
   try {
+    debugger;
     const username = req.query.username as string;
     if (!username) {
       return void res.status(400).json({ error: "Username is required" });

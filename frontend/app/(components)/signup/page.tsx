@@ -9,7 +9,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../public/store';
 import { login } from '@/public/features/authSlice';
 import { setAuthCookie } from '../_cookies/cookies';
-
+import dotenv from "dotenv"
+dotenv.config()
 interface User {
   username: string;
   email: string;

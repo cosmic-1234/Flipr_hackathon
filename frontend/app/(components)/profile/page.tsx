@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Pencil } from 'lucide-react';
+import { Pencil, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/public/store';
+import dotenv from "dotenv"
+dotenv.config()
 
 interface User {
   id: string;

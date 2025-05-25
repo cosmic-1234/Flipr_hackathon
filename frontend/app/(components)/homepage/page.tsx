@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageCircle, CheckCheck, Mic, Paperclip, Smile, Image as ImageIcon, ThumbsUp, Settings, LogOut, User, Moon, Sun, Plus } from 'lucide-react';
+import { CheckCheck, Mic, Paperclip, Smile, ThumbsUp, Settings, LogOut, User, Moon, Sun, Plus, X } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import {
@@ -16,15 +16,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
-import { useTheme } from "next-themes";
+} from '@/components/ui/dropdown-menu';
+import { useTheme } from 'next-themes';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Command,
   CommandEmpty,
@@ -32,12 +32,13 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
-import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+} from '@/components/ui/command';
+import { Badge } from '@/components/ui/badge';
 import debounce from 'lodash/debounce';
-import { useSelector } from 'react-redux'
-import { RootState } from '@/public/store'
+import { useSelector } from 'react-redux';
+import { RootState } from '@/public/store';
+import dotenv from "dotenv"
+dotenv.config()
 interface Message {
   id: string;
   text?: string;
@@ -68,7 +69,8 @@ interface SearchUser {
   avatarUrl?: string;
 }
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000';
+const SOCKET_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
 
 export default function HomePage() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -89,94 +91,92 @@ export default function HomePage() {
   const [isGroup, setIsGroup] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const token = useSelector((state: RootState) => state.auth.token);
-  // Create a memoized debounced search function
-  const debouncedSearch = useCallback(
-    debounce(async (query: string) => {
-      if (!query.trim()) {
-        setSearchResults([]);
-        return;
-      }
-      setIsSearching(true);
-      try {
-        console.log(query)
-        const response = await axios.get(`http://localhost:3000/api/v1/user/search`, {
-          params: { q: query }, 
-          headers : {
-            Authorization : token
-          }
-        });
+  const username = useSelector((state: RootState)=>state.auth.username)
+  // const debouncedSearch = useCallback(
+  //   debounce(async (query: string) => {
+  //     if (!query.trim()) return;
+  //     setIsSearching(true);
+  //     try {
+  //       const response = await axios.get(`${API_URL}/user/search`, {
+  //         params: { q: query },
+  //         headers: { Authorization: token },
+  //       });
+  //       setSearchResults(response.data.users);
+  //     } catch (error) {
+  //       console.error('Search error:', error);
+  //       toast.error('Failed to search users');
+  //     } finally {
+  //       setIsSearching(false);
+  //     }
+  //   }, 500),
+  //   [token]
+  // );
+
+  const debouncedSearch = debounce(async (query) => {
+    if (query.trim() === "") return;
+    setIsSearching(true);
+    try {
+      const response = await axios.get(`${API_URL}/user/search`, {
+        params: { q: query },
+      });
+  
+      if (response.data.users) {
         setSearchResults(response.data.users);
-      } catch (error) {
-        console.error('Error searching users:', error);
-        toast.error('Failed to search users');
-      } finally {
+        setIsSearching(false);
+      } else {
+        setSearchResults([]);
         setIsSearching(false);
       }
-    }, 500),
-    [] // Empty dependency array since we don't want to recreate this function
-  );
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+      setSearchResults([]);
+      setIsSearching(false);
+    }
+  }, 1200); 
 
-  // Effect to trigger search when query changes
+
   useEffect(() => {
     debouncedSearch(searchQuery);
-    return () => {
-      debouncedSearch.cancel();
-    };
-  }, [searchQuery, debouncedSearch]);
+  }, [searchQuery]);
+  useEffect(()=>{
+
+  },[searchResults])
 
   useEffect(() => {
-    const fetchChats = async () => {
-      try {
-        const response = await axios.get("http://localhost:3000/api/v1/chats/getchats", {
-          params: { username: "adminn" }
-        });
-        setChats(response.data.chats);
-      } catch (error) {
-        console.error("Error fetching chats:", error);
-        toast.error("Failed to fetch chats");
-      }
-    };
+    if (!username) return;
 
-    fetchChats();
-  }, []);
+    const getchats=async ()=>{
+      debugger
+      const { data } = await axios.get(`${API_URL}/chats/getchats`, {
+        
+        params: { username: username },
+      });
+      setChats(data.chats);
+    }
+    getchats()
+  }, [username]);
 
   useEffect(() => {
     if (!user) return;
-
-    const newSocket = io(SOCKET_URL, {
-      auth: {
-        token: localStorage.getItem('token')
-      }
-    });
+    const newSocket = io(SOCKET_URL, { auth: { token: localStorage.getItem('token') } });
 
     newSocket.on('connect', () => {
       newSocket.emit('join', { id: user.id, name: user.username });
-    });
-
-    newSocket.on('connect_error', (error) => {
-      toast.error('Failed to connect to chat server');
-      console.error('Socket connection error:', error);
     });
 
     newSocket.on('message', (newMessage: Message) => {
       setMessages((prev) => [...prev, newMessage]);
     });
 
-    newSocket.on('typing', (user: User) => {
+    newSocket.on('typing', () => {
       setIsTyping(true);
       setTimeout(() => setIsTyping(false), 1000);
     });
 
-    newSocket.on('onlineUsers', (users: User[]) => {
-      setOnlineUsers(users);
-    });
+    newSocket.on('onlineUsers', setOnlineUsers);
 
     setSocket(newSocket);
-
     return () => {
-      newSocket.off('message');
-      newSocket.off('typing');
-      newSocket.off('onlineUsers');
       newSocket.disconnect();
     };
   }, [user]);
@@ -186,8 +186,8 @@ export default function HomePage() {
   }, [messages]);
 
   const handleSend = () => {
-    if (!socket || !user || message.trim() === '') return;
-    
+    if (!socket || !user || !message.trim()) return;
+
     const newMsg: Message = {
       id: Date.now().toString(),
       text: message,
@@ -195,17 +195,18 @@ export default function HomePage() {
       group: selectedGroup,
       timestamp: new Date().toLocaleTimeString(),
       status: 'sent',
-      type: 'text'
+      type: 'text',
     };
-    
+
     socket.emit('message', newMsg);
     setMessages((prev) => [...prev, newMsg]);
     setMessage('');
   };
 
   const handleTyping = () => {
-    if (!socket || !user) return;
-    socket.emit('typing', { id: user.id, name: user.username });
+    if (socket && user) {
+      socket.emit('typing', { id: user.id, name: user.username });
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -221,17 +222,12 @@ export default function HomePage() {
         group: selectedGroup,
         timestamp: new Date().toLocaleTimeString(),
         status: 'sent',
-        type: 'image'
+        type: 'image',
       };
       socket.emit('message', newMsg);
       setMessages((prev) => [...prev, newMsg]);
     };
     reader.readAsDataURL(file);
-  };
-
-  const handleReaction = (messageId: string, reaction: string) => {
-    if (!socket) return;
-    socket.emit('reaction', { messageId, reaction });
   };
 
   const handleLogout = () => {
@@ -240,53 +236,51 @@ export default function HomePage() {
   };
 
   const handleCreateChat = async () => {
-    if (selectedUsers.length === 0) {
-      toast.error('Please select at least one user');
-      return;
-    }
-
-    if (isGroup && !chatName.trim()) {
-      toast.error('Please enter a chat name');
+    debugger
+    if (selectedUsers.length === 0 || (isGroup && !chatName.trim())) {
+      toast.error('Please fill in required fields');
       return;
     }
 
     try {
-      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/chats/createchat`, {
-        usernames: selectedUsers.map(user => user.username),
+      debugger;
+      await axios.post(`${API_URL}/chats/createchat`, {
+        usernames: selectedUsers.map((u) => u.username),
         isGroup,
-        chatname: chatName
+        chatname: chatName,
+        username:username
       });
-
-      toast.success('Chat created successfully');
+debugger
+      toast.success('Chat created');
       setIsCreateChatOpen(false);
       setSelectedUsers([]);
       setChatName('');
       setIsGroup(false);
-      
-      // Refresh chats list
-      const chatsResponse = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/chats/getchats`, {
-        params: { username: user?.username }
+      debugger;
+      const { data } = await axios.get(`${API_URL}/chats/getchats`, {
+        
+        params: { username: username },
       });
-      setChats(chatsResponse.data.chats);
+      setChats(data.chats);
     } catch (error) {
-      console.error('Error creating chat:', error);
-      toast.error('Failed to create chat');
+      toast.error('Chat creation failed');
     }
   };
 
   const addUser = (user: SearchUser) => {
-    if (!selectedUsers.find(u => u.id === user.id)) {
+    if (!selectedUsers.find((u) => u.id === user.id)) {
       setSelectedUsers([...selectedUsers, user]);
     }
     setSearchQuery('');
   };
 
   const removeUser = (userId: string) => {
-    console.log('Removing user with ID:', userId);
-    console.log('Current selected users:', selectedUsers);
-    const updatedUsers = selectedUsers.filter(user => user.id !== userId);
-    console.log('Updated users:', updatedUsers);
-    setSelectedUsers(updatedUsers);
+    setSelectedUsers((prev) => prev.filter((u) => u.id !== userId));
+  };
+
+  const handleReaction = (messageId: string, reaction: string) => {
+    if (!socket) return;
+    socket.emit('reaction', { messageId, reaction });
   };
 
   // if (!user) {
@@ -347,9 +341,9 @@ export default function HomePage() {
                         <CommandEmpty>No users found.</CommandEmpty>
                       ) : (
                         <CommandGroup>
-                          {searchResults.map((user) => (
+                          {searchResults.map((user, index) => (
                             <CommandItem
-                              key={user.id}
+                              key={index}
                               onSelect={() => addUser(user)}
                               className="cursor-pointer"
                             >
