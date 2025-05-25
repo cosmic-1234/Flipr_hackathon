@@ -18,6 +18,7 @@ const db_1 = __importDefault(require("../../db/db"));
 const zod_1 = require("../../zod");
 const dotenv_1 = __importDefault(require("dotenv"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const middleware_1 = __importDefault(require("../../middleware/middleware"));
 dotenv_1.default.config();
 //This Route is part of Step 2
 //SIGNUP
@@ -89,8 +90,19 @@ router.get("/logout", (req, res) => __awaiter(void 0, void 0, void 0, function* 
     res.clearCookie('role', { httpOnly: true, secure: false, path: '/' });
     res.status(200).json({ message: 'Logged out successfully' });
 }));
+router.get("/profile", middleware_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        return void res.status(200).json(req.user);
+    }
+    catch (e) {
+        console.log("ERR", e);
+        return void res.status(511).json({
+            message: "Could'nt get the data",
+        });
+    }
+}));
 // Add this new endpoint for searching users
-router.get("/search", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/search", middleware_1.default, (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const searchQuery = req.query.q;
     console.log('Search query received:', searchQuery);
     console.log('Query type:', typeof searchQuery);

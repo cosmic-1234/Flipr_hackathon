@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -9,8 +8,6 @@ import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../../public/store';
 import { login } from '@/public/features/authSlice';
-import dotenv from "dotenv";
-dotenv.config();
 
 export default function UserSignin() {
   const dispatch = useDispatch();
@@ -22,16 +19,18 @@ export default function UserSignin() {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
   useEffect(() => {
-      if (token) {
-        router.push('/client/home');
-      }
-    }, [token, router]);
+    if (token) {
+      router.push('/homepage');
+    }
+  }, [token, router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/client/signin`,
+        `${process.env.NEXT_PUBLIC_API_URL}/user/signin`,
         {
           email: formData.email,
           password: formData.password,
@@ -41,13 +40,13 @@ export default function UserSignin() {
         }
       );
 
-      if (!response.data) {
+      if (!response.data || !response.data.token) {
         alert('Login failed');
         return;
       }
 
-      const { token, role, username, userId } = response.data;
-      
+      const { token } = response.data;
+
       localStorage.setItem('token', token);
       setAuthCookie(token);
       dispatch(
@@ -55,12 +54,12 @@ export default function UserSignin() {
           token,
           isAuthenticated: true,
           email: formData.email,
-          username,
-          role,
-          userId,
+          username: '', // Not returned by backend
+          role: '',     // Not returned by backend
+          userId: '',   // Not returned by backend
         })
       );
-      router.push('/client/home');
+      router.push('/homepage');
     } catch (e) {
       console.error(e);
       alert('Something went wrong');
@@ -155,7 +154,7 @@ export default function UserSignin() {
 
         <p className="text-center text-gray-400 mt-5 text-xs">
           New here?{' '}
-          <Link href="/usersignup" className="text-cyan-400 font-semibold hover:underline">
+          <Link href="/signup" className="text-cyan-400 font-semibold hover:underline">
             Create Account
           </Link>
         </p>

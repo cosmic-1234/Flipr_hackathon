@@ -9,5 +9,5 @@ export const USER_BODY = zod.object({
 export const SIGNIN_BODY = zod.object({
   email: zod.string().email(),
   password: zod.string(),
-  username: zod.string()
+
 })
