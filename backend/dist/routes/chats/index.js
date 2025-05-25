@@ -52,7 +52,12 @@ router.get("/chats/:chatId/messages", middleware_1.default, (req, res) => __awai
     }
 }));
 router.post("/createchat", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    debugger;
     const usernames = req.body.usernames;
+    const singleUsername = req.body.username;
+    if (singleUsername) { // Ensure the single username exists
+        usernames.push(singleUsername);
+    }
     console.log(usernames);
     try {
         const chat = yield db_1.default.chat.create({
@@ -64,6 +69,7 @@ router.post("/createchat", (req, res) => __awaiter(void 0, void 0, void 0, funct
         if (chat) {
             const participantsData = usernames.map((username) => ({
                 chatId: chat.id,
+                chatname: chat.chatname,
                 username
             }));
             try {
@@ -91,6 +97,7 @@ router.post("/createchat", (req, res) => __awaiter(void 0, void 0, void 0, funct
 }));
 router.get("/getchats", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
+        .debugger;
         const username = req.query.username;
         if (!username) {
             return void res.status(400).json({ error: "Username is required" });

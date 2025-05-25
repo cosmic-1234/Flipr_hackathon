@@ -3,7 +3,7 @@ name: Continuous Deployment(Backend)
 on:
   push:
     branches:
-      - main
+      - Main
 
 jobs:
   build:
@@ -24,7 +24,7 @@ jobs:
           context: .
           file: ./docker/Dockerfile.backend
           push: true
-          tags: alexgoot/staff_backend:${{ github.sha }}
+          tags: alexgoot/gotsapp_backend:${{ github.sha }}
 
       - name: Debug database URL
         run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}"
@@ -57,5 +57,5 @@ jobs:
                       -e WS_URL='${{ secrets.WS_URL }}' \
                       --name backend \
                       --network staffingUp-network \
-                      alexgoot/staff_backend:${{ github.sha }} << 'EOF'
+                      alexgoot/gotsapp_backend:${{ github.sha }} << 'EOF'
              
